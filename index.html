@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DeliveryAI | Delivery time prediction</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ---------- 1. Tokens ---------- */
+:root{--bg:#0B1020;--bg2:#111827;--card:#151D30;--line:rgba(148,163,184,.16);--ink:#F8FAFC;--mute:#94A3B8;
+--accent:#6366F1;--accent2:#06B6D4;--ok:#10B981;--err:#F87171;--r:14px;--shadow:0 18px 50px rgba(0,0,0,.35)}
+[data-theme=light]{--bg:#F5F7FB;--bg2:#EAEEF7;--card:#FFFFFF;--line:rgba(15,23,42,.12);--ink:#0F172A;--mute:#475569;--shadow:0 14px 40px rgba(15,23,42,.10)}
+/* ---------- 2. Base ---------- */
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{margin:0;font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);line-height:1.55;overflow-x:hidden;transition:background .3s,color .3s}
+h1,h2,h3,p{margin:0}.wrap{width:min(1120px,92%);margin:0 auto}
+section{padding:84px 0}.sec-title{font-size:1.7rem;font-weight:700;letter-spacing:-.02em}.sec-sub{color:var(--mute);margin:8px 0 36px;max-width:58ch}
+:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+/* ---------- 3. Navigation ---------- */
+nav{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.nav-in{display:flex;align-items:center;justify-content:space-between;height:64px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.02em;color:var(--ink);text-decoration:none}
+.logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center}
+.links{display:flex;align-items:center;gap:6px}
+.links a{color:var(--mute);text-decoration:none;font-size:.92rem;font-weight:500;padding:8px 14px;border-radius:9px;transition:.2s}
+.links a:hover{color:var(--ink);background:var(--bg2)}.links a.active{color:var(--ink);background:var(--bg2)}
+.icon-btn{background:none;border:1px solid var(--line);color:var(--ink);width:38px;height:38px;border-radius:10px;cursor:pointer;font-size:1rem;transition:.2s}
+.icon-btn:hover{border-color:var(--accent)}.burger{display:none}
+/* ---------- 4. Hero ---------- */
+.hero{padding:96px 0 72px;background:radial-gradient(60% 60% at 80% 10%,rgba(99,102,241,.22),transparent 60%),radial-gradient(40% 40% at 10% 90%,rgba(6,182,212,.14),transparent 60%)}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
+.hero h1{font-size:clamp(2.2rem,5vw,3.4rem);font-weight:800;letter-spacing:-.035em;line-height:1.08}
+.hero p.lead{color:var(--mute);font-size:1.1rem;margin:16px 0 8px}.hero p.desc{color:var(--mute);max-width:52ch;margin-bottom:30px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;border:0;cursor:pointer;font:inherit;font-weight:600;color:#fff;padding:13px 24px;border-radius:12px;text-decoration:none;
+background:linear-gradient(135deg,var(--accent),#7c7ff5);box-shadow:0 8px 24px rgba(99,102,241,.35);transition:transform .15s,box-shadow .2s,opacity .2s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(99,102,241,.5)}.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.6;cursor:not-allowed;transform:none}.btn.ghost{background:none;color:var(--ink);border:1px solid var(--line);box-shadow:none}.btn.ghost:hover{border-color:var(--accent)}
+.route{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:var(--shadow)}.route svg{width:100%;height:auto;display:block}
+.route-meta{display:flex;justify-content:space-between;color:var(--mute);font-size:.85rem;margin-top:8px}
+/* ---------- 5. Prediction dashboard ---------- */
+.dash{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:var(--shadow)}
+.card h3{font-size:1.1rem;font-weight:700;margin-bottom:20px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:18px}.field{display:flex;flex-direction:column;gap:7px}
+.field label{font-size:.85rem;font-weight:600;display:flex;gap:6px;align-items:center}.field .unit{color:var(--mute);font-weight:400}
+.field input,.field select{width:100%;font:inherit;color:var(--ink);background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:11px 12px;transition:border-color .2s,box-shadow .2s}
+.field input:focus,.field select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.25)}
+.field.bad input,.field.bad select{border-color:var(--err)}.err{color:var(--err);font-size:.78rem;min-height:1em}
+.custom{display:none;margin-top:6px}.custom.on{display:block}
+.actions{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap}
+.spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
+.loading .spin{display:inline-block}@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;color:var(--mute);padding:40px 10px}.empty .big{font-size:2.2rem;margin-bottom:8px}
+.result{display:none}.result.on{display:block;animation:pop .45s cubic-bezier(.2,.9,.3,1.2)}@keyframes pop{from{opacity:0;transform:scale(.96)}}
+.eta{font-size:clamp(3rem,7vw,4.2rem);font-weight:800;letter-spacing:-.04em;line-height:1;background:linear-gradient(135deg,var(--ink),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.eta small{font-size:1.1rem;font-weight:600;color:var(--mute);-webkit-text-fillcolor:initial;margin-left:8px;-webkit-text-fill-color:var(--mute)}
+.hm{color:var(--accent2);font-weight:600;margin:6px 0 10px}.msg{color:var(--mute);margin-bottom:20px}
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:10px;border-top:1px solid var(--line);padding-top:18px}
+.sum div{background:var(--bg2);border-radius:10px;padding:10px 12px;font-size:.82rem}.sum span{display:block;color:var(--mute);font-size:.74rem}.sum b{font-weight:600;word-break:break-word}
+/* ---------- 6. Steps / model / footer ---------- */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;position:relative}
+.step{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px}
+.step .ic{width:44px;height:44px;border-radius:12px;background:rgba(99,102,241,.15);display:grid;place-items:center;font-size:1.3rem;margin-bottom:14px}
+.step h3{font-size:1rem;margin-bottom:6px}.step p{color:var(--mute);font-size:.9rem}
+.step:not(:last-child)::after{content:"";position:absolute;top:46px;width:20px;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));z-index:1}
+.step:nth-child(1)::after{left:calc(33.33% - 20px)}.step:nth-child(2)::after{left:calc(66.66% - 20px)}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.fact{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px}.fact span{color:var(--mute);font-size:.8rem;display:block}.fact b{font-weight:600}
+.note{margin-top:18px;color:var(--mute);font-size:.85rem;border-left:3px solid var(--accent);padding-left:14px;max-width:70ch}
+footer{border-top:1px solid var(--line);padding:36px 0;color:var(--mute);font-size:.88rem}
+.foot{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
+/* ---------- 7. Toasts ---------- */
+#toasts{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:10px;z-index:100;max-width:min(380px,calc(100% - 36px))}
+.toast{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;padding:12px 16px;box-shadow:var(--shadow);font-size:.9rem;animation:slide .3s ease}
+.toast.error{border-left-color:var(--err)}.toast.success{border-left-color:var(--ok)}@keyframes slide{from{opacity:0;transform:translateX(24px)}}
+/* ---------- 8. Responsive ---------- */
+@media(max-width:900px){.hero-grid,.dash,.steps{grid-template-columns:1fr}.step::after{display:none}section{padding:60px 0}
+.burger{display:block}.links{display:none;position:absolute;top:64px;left:0;right:0;flex-direction:column;align-items:stretch;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 4%}.links.open{display:flex}}
+@media(max-width:520px){.fields{grid-template-columns:1fr}.card{padding:20px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-in">
+    <a class="brand" href="#home"><span class="logo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h10M11 6l6 6-6 6"/></svg></span>DeliveryAI</a>
+    <div class="links" id="links">
+      <a href="#home">Dashboard</a><a href="#predict">Predict Delivery</a><a href="#model">About Model</a>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="icon-btn" id="themeBtn" aria-label="Toggle theme">☾</button>
+      <button class="icon-btn burger" id="burger" aria-label="Open menu">☰</button>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="home">
+  <div class="wrap hero-grid">
+    <div>
+      <h1>Predict Smarter. Deliver Faster.</h1>
+      <p class="lead">AI-powered delivery time estimation using Machine Learning.</p>
+      <p class="desc">Describe an order (weather, traffic, distance, vehicle and courier) and a trained Random Forest model estimates how many minutes the delivery will take.</p>
+      <a class="btn" href="#predict">Predict Delivery Time</a>
+    </div>
+    <div class="route" aria-hidden="true">
+      <svg viewBox="0 0 420 210">
+        <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#6366F1"/><stop offset="1" stop-color="#06B6D4"/></linearGradient></defs>
+        <path d="M30 170 C110 170 110 60 210 60 S320 150 390 50" fill="none" stroke="var(--line)" stroke-width="10" stroke-linecap="round"/>
+        <path d="M30 170 C110 170 110 60 210 60 S320 150 390 50" fill="none" stroke="url(#g)" stroke-width="3" stroke-linecap="round" stroke-dasharray="6 10"/>
+        <circle cx="30" cy="170" r="9" fill="#6366F1"/><circle cx="390" cy="50" r="9" fill="#06B6D4"/>
+        <circle r="8" fill="#fff" stroke="#6366F1" stroke-width="4"><animateMotion dur="6s" repeatCount="indefinite" path="M30 170 C110 170 110 60 210 60 S320 150 390 50"/></circle>
+      </svg>
+      <div class="route-meta"><span>Restaurant</span><span>Your door</span></div>
+    </div>
+  </div>
+</header>
+
+<main>
+<section id="predict">
+  <div class="wrap">
+    <h2 class="sec-title">Predict delivery time</h2>
+    <p class="sec-sub">Fill in the seven delivery details. Every estimate comes from your FastAPI model.</p>
+    <div class="dash">
+      <form class="card" id="form" novalidate>
+        <h3>Delivery details</h3>
+        <div class="fields" id="fields"></div>
+        <div class="actions">
+          <button class="btn" id="submitBtn" type="submit"><span class="spin"></span><span id="btnText">Predict Delivery Time</span></button>
+          <button class="btn ghost" id="resetBtn" type="button">Reset form</button>
+        </div>
+      </form>
+      <aside class="card" aria-live="polite">
+        <h3>Estimated delivery time</h3>
+        <div class="empty" id="empty"><div class="big">🛵</div>Your estimate will appear here after you submit the form.</div>
+        <div class="result" id="result">
+          <div class="eta"><span id="minutes">0</span><small>minutes</small></div>
+          <div class="hm" id="hm"></div>
+          <p class="msg" id="msg"></p>
+          <div class="sum" id="summary"></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section id="how" style="background:var(--bg2)">
+  <div class="wrap">
+    <h2 class="sec-title">How it works</h2>
+    <p class="sec-sub">Three steps from order details to an estimate.</p>
+    <div class="steps">
+      <div class="step"><div class="ic">📝</div><h3>Enter delivery details</h3><p>Describe the weather, traffic, time of day, vehicle, distance, preparation time and courier experience.</p></div>
+      <div class="step"><div class="ic">🌲</div><h3>The model processes them</h3><p>Your details are encoded and passed through a Random Forest Regressor behind a FastAPI endpoint.</p></div>
+      <div class="step"><div class="ic">⏱️</div><h3>Receive the estimate</h3><p>The predicted delivery time comes back in minutes and is shown with a summary of what you entered.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="model">
+  <div class="wrap">
+    <h2 class="sec-title">About the model</h2>
+    <p class="sec-sub">Taken from the training notebook.</p>
+    <div class="facts">
+      <div class="fact"><span>Algorithm</span><b>Random Forest Regressor</b></div>
+      <div class="fact"><span>Initial configuration</span><b>100 estimators</b></div>
+      <div class="fact"><span>Pipeline</span><b>Scikit-learn Pipeline + ColumnTransformer</b></div>
+      <div class="fact"><span>Categorical features</span><b>Missing-value imputation + OneHotEncoder</b></div>
+      <div class="fact"><span>Numerical features</span><b>Median imputation</b></div>
+      <div class="fact"><span>Tuning</span><b>RandomizedSearchCV, 5-fold CV</b></div>
+      <div class="fact"><span>Random state</span><b>42</b></div>
+    </div>
+    <p class="note">The final hyperparameters come from the randomized search, so they can differ from the initial 100-tree setup.</p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div><b style="color:var(--ink)">DeliveryAI</b><br>Estimates food delivery time from order and courier details.</div>
+    <div>Machine Learning-powered prediction<br>© <span id="year"></span> DeliveryAI</div>
+  </div>
+</footer>
+<div id="toasts" role="status"></div>
+
+<script>
+/* ---------- Config: change the API address here ---------- */
+const CONFIG = {
+  // Same origin when served by FastAPI; falls back to local uvicorn when opened as a file.
+  API_BASE: location.protocol.startsWith("http") ? location.origin : "http://127.0.0.1:8000",
+  PREDICT_PATH: "/predict"
+};
+/* Dropdown options are suggestions. "Other…" lets users type any category. */
+const CATEGORICAL = [
+  {name:"Weather", label:"Weather", icon:"🌦️", tip:"Current weather on the route", options:["Clear","Rainy","Foggy","Windy","Snowy","Unknown"]},
+  {name:"Traffic_level", label:"Traffic level", icon:"🚦", tip:"How busy the roads are", options:["Low","Medium","High","Unknown"]},
+  {name:"Time_of_Day", label:"Time of day", icon:"🕒", tip:"When the order is placed", options:["Morning","Afternoon","Evening","Night","Unknown"]},
+  {name:"Vehicle_Type", label:"Vehicle type", icon:"🛵", tip:"Vehicle the courier uses", options:["Bike","Scooter","Car","Unknown"]}
+];
+const NUMERIC = [
+  {name:"Distance_km", label:"Distance", icon:"📍", unit:"km", step:"0.1", ph:"e.g. 7.5", tip:"Distance from restaurant to customer", check:v=>v>0, error:"Enter a distance greater than 0."},
+  {name:"Preparation_Time_min", label:"Preparation time", icon:"🍳", unit:"minutes", step:"1", ph:"e.g. 15", tip:"Time the kitchen needs to prepare the food", check:v=>Number.isInteger(v)&&v>0, error:"Enter a whole number of minutes (1 or more)."},
+  {name:"Courier_Experience_yrs", label:"Courier experience", icon:"🎓", unit:"years", step:"0.5", ph:"e.g. 2.5", tip:"Years of delivery experience", check:v=>v>=0, error:"Enter 0 or more years."}
+];
+const $ = id => document.getElementById(id);
+
+/* ---------- Build the form ---------- */
+function buildForm(){
+  const html = [];
+  CATEGORICAL.forEach(f=>{
+    html.push(`<div class="field" id="f-${f.name}" title="${f.tip}">
+      <label for="${f.name}">${f.icon} ${f.label}</label>
+      <select id="${f.name}" name="${f.name}"><option value="" disabled selected>Select…</option>
+        ${f.options.map(o=>`<option>${o}</option>`).join("")}<option value="__other">Other…</option></select>
+      <input class="custom" id="${f.name}_custom" placeholder="Type a category" aria-label="Custom ${f.label}">
+      <span class="err"></span></div>`);
+  });
+  NUMERIC.forEach(f=>{
+    html.push(`<div class="field" id="f-${f.name}" title="${f.tip}">
+      <label for="${f.name}">${f.icon} ${f.label} <span class="unit">(${f.unit})</span></label>
+      <input id="${f.name}" name="${f.name}" type="number" inputmode="decimal" step="${f.step}" placeholder="${f.ph}">
+      <span class="err"></span></div>`);
+  });
+  $("fields").innerHTML = html.join("");
+  CATEGORICAL.forEach(f=>$(f.name).addEventListener("change",e=>{
+    $(f.name+"_custom").classList.toggle("on", e.target.value==="__other");
+  }));
+}
+
+/* ---------- Validation ---------- */
+function setError(name,msg){ const box=$("f-"+name); box.classList.toggle("bad",!!msg); box.querySelector(".err").textContent=msg||""; }
+function collectPayload(){
+  const payload = {}; let ok = true;
+  CATEGORICAL.forEach(f=>{
+    const sel = $(f.name).value;
+    const val = sel==="__other" ? $(f.name+"_custom").value.trim() : sel;
+    if(!val){ setError(f.name,"Choose an option or type your own."); ok=false; } else { setError(f.name,""); payload[f.name]=val; }
+  });
+  NUMERIC.forEach(f=>{
+    const raw = $(f.name).value.trim(); const num = Number(raw);
+    if(raw===""||!Number.isFinite(num)){ setError(f.name,"This field is required."); ok=false; }
+    else if(!f.check(num)){ setError(f.name,f.error); ok=false; }
+    else { setError(f.name,""); payload[f.name]=num; }
+  });
+  return ok ? payload : null;
+}
+
+/* ---------- Toasts ---------- */
+function toast(message,type="info"){
+  const el = document.createElement("div"); el.className = "toast "+type; el.textContent = message;
+  $("toasts").appendChild(el); setTimeout(()=>el.remove(), 5000);
+}
+
+/* ---------- API call ---------- */
+class ApiError extends Error {}
+async function requestPrediction(payload){
+  let res;
+  try{
+    res = await fetch(CONFIG.API_BASE + CONFIG.PREDICT_PATH,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+  }catch(_){
+    throw new ApiError(`Can't reach the prediction server at ${CONFIG.API_BASE}. Check that uvicorn is running.`);
+  }
+  let body = null; try{ body = await res.json(); }catch(_){}
+  if(res.status===422){
+    const detail = Array.isArray(body?.detail) ? body.detail.map(d=>`${d.loc?.slice(-1)}: ${d.msg}`).join("; ") : "Invalid input.";
+    throw new ApiError("The server rejected the input. "+detail);
+  }
+  if(!res.ok) throw new ApiError(`The server returned an error (HTTP ${res.status}).`);
+  const minutes = body?.delivery_time_min;
+  if(typeof minutes!=="number" || !Number.isFinite(minutes)) throw new ApiError("Unexpected response from the server. Expected a numeric delivery_time_min.");
+  return minutes;
+}
+
+/* ---------- Result ---------- */
+function animateNumber(el,target){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){ el.textContent = target.toFixed(2); return; }
+  const start = performance.now(), dur = 900;
+  (function tick(now){
+    const t = Math.min((now-start)/dur,1), eased = 1-Math.pow(1-t,3);
+    el.textContent = (target*eased).toFixed(2);
+    if(t<1) requestAnimationFrame(tick);
+  })(start);
+}
+function showResult(minutes,payload){
+  const m = Math.round(minutes*100)/100;
+  $("empty").style.display = "none"; $("result").classList.add("on");
+  animateNumber($("minutes"), m);
+  const whole = Math.round(m);
+  $("hm").textContent = whole>=60 ? `About ${Math.floor(whole/60)} h ${whole%60} min` : "Under an hour";
+  $("msg").textContent = `Your estimated delivery time is ${m.toFixed(2)} minutes.`;
+  const labels = Object.fromEntries([...CATEGORICAL,...NUMERIC].map(f=>[f.name,f]));
+  $("summary").innerHTML = Object.entries(payload).map(([k,v])=>{
+    const f = labels[k]; const unit = f.unit ? " "+f.unit : "";
+    return `<div><span>${f.label}</span><b></b></div>`.replace("<b></b>",`<b>${String(v).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}${unit}</b>`);
+  }).join("");
+}
+
+/* ---------- Events ---------- */
+function setLoading(on){
+  $("form").classList.toggle("loading",on); $("submitBtn").disabled = on; $("resetBtn").disabled = on;
+  $("btnText").textContent = on ? "Predicting…" : "Predict Delivery Time";
+}
+$("form").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const payload = collectPayload();
+  if(!payload){ toast("Please fix the highlighted fields.","error"); return; }
+  setLoading(true);
+  try{
+    const minutes = await requestPrediction(payload);
+    showResult(minutes,payload); toast("Prediction ready.","success");
+  }catch(err){
+    toast(err instanceof ApiError ? err.message : "Something went wrong. Please try again.","error");
+  }finally{ setLoading(false); }
+});
+$("resetBtn").addEventListener("click",()=>{
+  $("form").reset(); document.querySelectorAll(".custom").forEach(c=>c.classList.remove("on"));
+  [...CATEGORICAL,...NUMERIC].forEach(f=>setError(f.name,""));
+  $("result").classList.remove("on"); $("empty").style.display = "";
+});
+
+/* ---------- Nav: mobile menu, scroll highlight, theme ---------- */
+$("burger").addEventListener("click",()=>$("links").classList.toggle("open"));
+$("links").addEventListener("click",()=>$("links").classList.remove("open"));
+const navLinks = [...document.querySelectorAll(".links a")];
+const spy = new IntersectionObserver(entries=>entries.forEach(en=>{
+  if(en.isIntersecting){ const id = "#"+en.target.id;
+    navLinks.forEach(a=>a.classList.toggle("active", a.getAttribute("href")===id || (id==="#how" && a.getAttribute("href")==="#predict"))); }
+}),{rootMargin:"-45% 0px -50% 0px"});
+["home","predict","how","model"].forEach(id=>spy.observe($(id)));
+$("themeBtn").addEventListener("click",()=>{
+  const root = document.documentElement, light = root.dataset.theme==="dark";
+  root.dataset.theme = light ? "light" : "dark"; $("themeBtn").textContent = light ? "☀" : "☾";
+});
+$("year").textContent = new Date().getFullYear();
+buildForm();
+</script>
+</body>
+</html>
